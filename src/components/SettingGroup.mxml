@@ -1,0 +1,241 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:VGroup xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		  xmlns:s="library://ns.adobe.com/flex/spark" 
+		  xmlns:mx="library://ns.adobe.com/flex/mx" width="500"  height="240" horizontalCenter="0" verticalCenter="0"  addedToStage="toStage()" >
+	<mx:TabNavigator  tabStyleName="mytab" horizontalCenter="0"  horizontalAlign="center"  tabHeight="40"  tabWidth="250" styleName="myTabNavi" x="0" y="0" width="500" height="240">
+		<mx:Canvas id="cv1" styleName="myCanvas" horizontalScrollPolicy="off" verticalScrollPolicy="off"   label="流视频" width="500" height="240" top="0">
+			<s:VGroup  width="500" height="240" top="2" horizontalCenter="0"  horizontalAlign="center">
+				<mx:FormItem color="#ffffff"   styleName="myForm"  label="IP:"  width="100%"  labelWidth="55">
+					
+					<mx:TextInput includeIn="default" itemCreationPolicy="immediate"   id="ipAddr" color="#ffffff" styleName="myTextInput" width="98%"/>
+					
+				</mx:FormItem>
+				
+				<mx:FormItem color="#ffffff" styleName="myForm" label="端口:" width="100%" labelWidth="55">
+					
+					<mx:TextInput includeIn="default" itemCreationPolicy="immediate"  id="port" restrict="0-9" color="#ffffff" styleName="myTextInput"  width="98%"/>
+					
+				</mx:FormItem>
+				<mx:FormItem color="#ffffff" top="5" styleName="myForm"  label="应用名:" width="100%"  labelWidth="55">
+					
+					<mx:TextInput includeIn="default" itemCreationPolicy="immediate"   id="appName" color="#ffffff" styleName="myTextInput" width="98%"/>
+					
+				</mx:FormItem>
+				
+				<mx:FormItem color="#ffffff" styleName="myForm" label="流名:" width="100%" labelWidth="55">
+					
+					<mx:TextInput includeIn="default" itemCreationPolicy="immediate"  id="streamName"  color="#ffffff" styleName="myTextInput"  width="98%"/>
+					
+				</mx:FormItem>
+				 
+				<mx:Button fontSize="21" id="submit" click="ok_Handle()"  height="40"    horizontalCenter="0"   width="490" textAlign="center" color="#ffffff" styleName="myButton" label="连接" toolTip="确定"/>
+				  
+			</s:VGroup>
+			 
+		</mx:Canvas>
+		
+		<mx:Canvas  label="服务器" width="500" height="240" horizontalScrollPolicy="off" verticalScrollPolicy="off">
+			<s:VGroup gap="32"  width="500" height="120"  top="20" horizontalCenter="0"  horizontalAlign="center" >
+				<mx:FormItem color="#ffffff"   styleName="myForm"  label="IP:"  width="100%"  labelWidth="55">
+					
+					<mx:TextInput includeIn="default" itemCreationPolicy="immediate"   id="serveripAddr" color="#ffffff" styleName="myTextInput" width="98%"/>
+					
+				</mx:FormItem>
+				
+				<mx:FormItem color="#ffffff" styleName="myForm" label="端口:" width="100%" labelWidth="55">
+					
+					<mx:TextInput includeIn="default" itemCreationPolicy="immediate"  id="serverportAddr" restrict="0-9" color="#ffffff" styleName="myTextInput"  width="98%"/>
+					
+				</mx:FormItem>
+				 
+				<mx:Button fontSize="21"  id="submit1" click="serverOk_Handle()"  height="40"   horizontalCenter="0"   width="490" textAlign="center" color="#ffffff" styleName="myButton"  toolTip="确定" label="连接"/>
+			
+			</s:VGroup>
+		</mx:Canvas>
+	</mx:TabNavigator>
+	      
+	<s:states>
+		<s:State name="default">
+			
+		</s:State>
+	</s:states>
+		<fx:Style>
+		@namespace s "library://ns.adobe.com/flex/spark";
+		@namespace mx "library://ns.adobe.com/flex/mx";
+		.myPanel
+		{
+			
+			closeButtonDisabledSkin: Embed(source="assets/Panel_closeButtonDisabledSkin.png");
+			closeButtonDownSkin: Embed(source="assets/Panel_closeButtonDownSkin.png");
+			closeButtonOverSkin: Embed(source="assets/Panel_closeButtonOverSkin.png");
+			closeButtonUpSkin: Embed(source="assets/Panel_closeButtonUpSkin.png");
+			borderSkin: Embed(source='assets/Panel_borderSkin.png',
+				scaleGridLeft='78', scaleGridTop='44', scaleGridRight='160', scaleGridBottom='120');
+			borderThicknessLeft: 20;
+			borderThicknessRight: 20;
+			borderThicknessTop: 50;
+			borderThicknessBottom: 20;
+			headerHeight: 30;
+			padding-top:50;
+			padding-left:20;
+			padding-right:20;
+			padding-bottom:20;
+			color: #000000;
+			titleStyleName: panelTitle;
+			fontWeight: normal;
+			fontSize: 15;
+			
+		}
+		.myForm
+		{
+			indicatorSkin: Embed(source="assets/FormItem_indicatorSkin.png");
+			fontSize:15;
+		}
+		.myTextInput
+		{
+			borderSkin: Embed(source='assets/textBox.png',
+				scaleGridLeft='34', scaleGridTop='10', scaleGridRight='45', scaleGridBottom='15');
+			color: #000000;
+			font-size:18;
+			padding-left:25;
+			showPromptWhenFocused: false;
+			
+		}
+		.myCanvas
+		{
+			backgroundColor:#000000;
+			backgroundAlpha:0;
+			borderAlpha:0;
+		}
+		.myTabNavi
+		{
+				backgroundColor:#000000;
+				backgroundAlpha:0.5;
+				barColor:#000000;
+		}
+		.mytab
+		{
+			  color:#ffffff;
+			  alpha:0;
+			  chromeColor:#1d953f;
+			  focusColor:#ffffff;
+			   
+		}
+	</fx:Style>
+	
+	<fx:Script>
+		<![CDATA[
+			import mx.effects.Move;
+			import mx.effects.easing.Bounce;
+			import mx.events.EffectEvent;
+			import spark.managers.PersistenceManager;
+			private var NumIpReg:RegExp =/^(1\d{2}|2[0-4]\d|25[0-5]|[1-9]\d|[1-9])\.(1\d{2}|2[0-4]\d|25[0-5]|[1-9]\d|\d)\.(1\d{2}|2[0-4]\d|25[0-5]|[1-9]\d|\d)\.(1\d{2}|2[0-4]\d|25[0-5]|[1-9]\d|\d)$/;
+			private var DomainIpReg:RegExp =/[a-zA-Z0-9][-a-zA-Z0-9]{0,62}(\.[a-zA-Z0-9][-a-zA-Z0-9]{0,62})+\.?/;
+			//	private var portReg:RegExp =/^[1-9]{1}[0-9]{1,}$/;
+		 
+			private	var mov:Move = new Move();
+			var persistencemanager:PersistenceManager=new PersistenceManager();
+			private function toStage():void{
+			    if(persistencemanager.load())
+				{
+					if(persistencemanager.getProperty("serverIp"))
+					{
+						ipAddr.text=String(persistencemanager.getProperty("serverIp"));
+					}
+					if(persistencemanager.getProperty("serverPort"))
+					{
+						port.text=String(persistencemanager.getProperty("serverPort"));
+					}
+					if(persistencemanager.getProperty("appName"))
+					{
+						appName.text=String(persistencemanager.getProperty("appName"));
+					}
+					if(persistencemanager.getProperty("streamName"))
+					{
+						streamName.text=String(persistencemanager.getProperty("streamName"));
+					}
+					if(persistencemanager.getProperty("serverIpAddr"))
+					{
+						serveripAddr.text=String(persistencemanager.getProperty("serverIpAddr"));
+					}
+					if(persistencemanager.getProperty("serverPortAddr"))
+					{
+						serverportAddr.text=String(persistencemanager.getProperty("serverPortAddr"));
+					}
+				}
+			}
+			private function ok_Handle():void
+			{ 
+			 
+				if((NumIpReg.test(ipAddr.text)||DomainIpReg.test(ipAddr.text))&&port.text!=""&&appName.text!=""&&streamName.text!="")
+				{
+					if(persistencemanager.load())
+					{
+						//persistencemanager.setProperty("rtmpAddress","rtmp://"+ipAddr.text+":"+port.text+"/Red5Server");
+						
+						//	persistencemanager.setProperty("rtmpAddress","rtmp://"+ipAddr.text+":"+port.text+"/SOSample");
+						persistencemanager.setProperty("rtmpAddress","rtmp://"+ipAddr.text+":"+port.text+"/"+appName.text);
+						//persistencemanager.setProperty("rtmpAddress","http://"+ipAddr.text+":"+port.text+"/"+streamName.text);
+						persistencemanager.setProperty("serverIp",ipAddr.text);
+						persistencemanager.setProperty("serverPort",port.text);
+						persistencemanager.setProperty("appName",appName.text);
+						persistencemanager.setProperty("streamName",streamName.text);
+						persistencemanager.save();
+					}
+					dispatchEvent(new Event("submit"));
+				}
+				else
+				{
+					if(!(NumIpReg.test(ipAddr.text)||DomainIpReg.test(ipAddr.text)))
+					{
+						//myTitle="IP填写错误";
+					}
+					else if(port.text=="")
+					{
+						//myTitle="端口必须填写";
+					}
+					else if(appName.text=="")
+					{
+						//myTitle="应用名必须填写";
+					}
+					else if(streamName.text=="")
+					{
+						//myTitle="流名必须填写";
+					}
+					mov.end();
+					mov.target=this;
+					mov.easingFunction=Bounce.easeOut;
+					mov.yTo =this.y-30;  
+				//	mov.duration=500;
+					mov.addEventListener(mx.events.EffectEvent.EFFECT_END,Move_End,false,0,true);
+					mov.play(null,true);
+				}
+			}
+			private function serverOk_Handle():void{
+				if((NumIpReg.test(serveripAddr.text)||DomainIpReg.test(serveripAddr.text))&&serverportAddr.text!="")
+				{
+					if(persistencemanager.load())
+					{
+						persistencemanager.setProperty("serverIpAddr",serveripAddr.text);
+						persistencemanager.setProperty("serverPortAddr",serverportAddr.text);
+						persistencemanager.save();
+					}
+					dispatchEvent(new Event("serversubmit"));
+				}
+				else
+				{
+					mov.end();
+					mov.target=this;
+					mov.easingFunction=Bounce.easeOut;
+					mov.yTo =this.y-30;  
+					//	mov.duration=500;
+					mov.addEventListener(mx.events.EffectEvent.EFFECT_END,Move_End,false,0,true);
+					mov.play(null,true);
+				}
+			}
+			private function Move_End(event:EffectEvent):void{
+				mov.removeEventListener(mx.events.EffectEvent.EFFECT_END,Move_End,false);
+			}
+		]]>
+	</fx:Script>
+</s:VGroup>

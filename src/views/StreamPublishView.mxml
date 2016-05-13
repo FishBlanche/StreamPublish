@@ -1,0 +1,291 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:View xmlns:fx="http://ns.adobe.com/mxml/2009"   
+		xmlns:s="library://ns.adobe.com/flex/spark"   backgroundColor="#000000"       removedFromStage="remove_Handle()"    creationComplete="create()"  xmlns:mx="library://ns.adobe.com/flex/mx" actionBarVisible="false">
+		<fx:Style>
+		@namespace s "library://ns.adobe.com/flex/spark";
+		@namespace mx "library://ns.adobe.com/flex/mx";
+		.pbstyle
+		{
+			barSkin: Embed(source="assets/ProgressBarSkin.png",
+				scaleGridLeft="2", scaleGridTop="2", scaleGridRight="30", scaleGridBottom="5");
+			indeterminateSkin: Embed(source="assets/ProgressIndeterminateSkin.png");
+			trackSkin: Embed(source="assets/ProgressTrackSkin.png",
+				scaleGridLeft="2", scaleGridTop="2", scaleGridRight="30", scaleGridBottom="5");
+			textAlign: center;
+			color:#ffffff;
+		}
+		
+	</fx:Style>
+	<fx:Script>
+		<![CDATA[
+			 
+			import mx.core.FlexGlobals;
+			import mx.effects.Move;
+			import mx.effects.easing.Bounce;
+			import mx.effects.easing.Linear;
+			import mx.events.EffectEvent;
+			import mx.events.ResizeEvent;
+			
+			import spark.managers.PersistenceManager;
+			
+			import components.CustomClient;
+			import components.SettingGroup;
+			var persistencemanager:PersistenceManager=new PersistenceManager();
+			//	private var videoURL:String = "livestream";
+			//private var videoURL:String = "rsc1";
+			//	private var videoURL:String = "hello";	
+			private var sv:StageVideo;
+			private var connection:NetConnection;
+			private var stream:NetStream;
+			private var video:Video = new Video();    
+			private	var sg:SettingGroup;
+			private	var mov:Move = new Move();
+			 private var cam:Camera;
+ 
+			private function remove_Handle():void{
+				//		this.removeEventListener(ResizeEvent.RESIZE,resize_Handle,false);
+			}
+			private function create():void
+			{
+				Multitouch.inputMode = MultitouchInputMode.GESTURE;
+				load_video();
+				 
+				//this.addEventListener(ResizeEvent.RESIZE,resize_Handle,false,0,true);
+				//navigateToURL(new URLRequest("rtmp://fmsvideo.p5w.net:1935"), "_blank");
+			}
+			 
+		 
+			private function load_video():void{
+				connection = new NetConnection();
+				connection.addEventListener(NetStatusEvent.NET_STATUS, netStatusHandler,false,0,true);
+				connection.addEventListener(SecurityErrorEvent.SECURITY_ERROR, securityErrorHandler,false,0,true);
+				connectStream_Handle();
+				
+				//	connection.connect("rtmp://192.168.0.161:1935/SOSample");
+				connection.client=this;
+			}
+		 
+			private function connectStream_Handle():void{
+				errorMessage.text="";
+				if(persistencemanager.load())
+				{
+					if(persistencemanager.getProperty("rtmpAddress"))
+					{
+						//	connection.connect(String(persistencemanager.getProperty("rtmpAddress")));
+							//	connection.connect("rtmp://192.0.0.158:1935/videoStream");
+								connection.connect(null);
+						// trace("连接地址::"+String(persistencemanager.getProperty("rtmpAddress")));
+						
+					}
+					else
+					{
+						errorMessage.text="流地址未知";
+					}
+				}
+				else
+				{
+					errorMessage.text="流地址未知";
+				}
+			}
+			private function move_SettingGp():void{
+				mov.end();
+				mov.target=sg;
+				mov.easingFunction=	Linear.easeInOut;
+				mov.xTo =this.width/2-250;
+				mov.yTo = -260;
+				mov.play();
+			}
+			private function onSwipe(evt:TransformGestureEvent):void { 
+				if(evt.offsetY== -1){ 
+					move_SettingGp();
+					mov.addEventListener(mx.events.EffectEvent.EFFECT_END,Move_End2,false,0,true);
+				}  
+			}
+			private function show_setting():void{
+				setbtn.enabled=false;
+				if(!sg)
+				{
+					sg=new SettingGroup;
+					sg.addEventListener("submit",submit_Handle,false,0,true);
+				 
+					sg.addEventListener(TransformGestureEvent.GESTURE_SWIPE, onSwipe,false,0,true); 
+				}
+				mov.end();
+				this.addElement(sg);
+				sg.width=500;
+				sg.height=240;
+				mov.target=sg;
+				mov.xFrom=this.width/2-250;
+				mov.yFrom = 0;
+				mov.easingFunction=Bounce.easeOut;
+				mov.xTo =this.width/2-250;
+				mov.yTo = this.height/2-120;
+				//mov.duration=500;
+				mov.addEventListener(mx.events.EffectEvent.EFFECT_END,Move_End,false,0,true);
+				mov.play();
+			}
+			
+			private function Move_End(event:EffectEvent):void{
+				mov.removeEventListener(mx.events.EffectEvent.EFFECT_END,Move_End,false);
+			}
+			private function Move_End1(event:EffectEvent):void{
+				mov.removeEventListener(mx.events.EffectEvent.EFFECT_END,Move_End1,false);
+				this.removeElement(sg);
+				enable_SetBtn();
+				connectStream_Handle();
+			}
+			private function Move_End2(event:EffectEvent):void{
+				mov.removeEventListener(mx.events.EffectEvent.EFFECT_END,Move_End2,false);
+				this.removeElement(sg);
+				enable_SetBtn();
+			}
+			private function Move_End3(event:EffectEvent):void{
+				mov.removeEventListener(mx.events.EffectEvent.EFFECT_END,Move_End3,false);
+				this.removeElement(sg);
+				enable_SetBtn();
+			}
+			private function enable_SetBtn():void{
+				setbtn.enabled=true;
+			}
+			private function submit_Handle(evt:Event):void
+			{
+				move_SettingGp();
+				mov.addEventListener(mx.events.EffectEvent.EFFECT_END,Move_End1,false,0,true);
+			}
+		 
+			private function netStatusHandler(event:NetStatusEvent):void {
+				trace("event.info.code"+event.info.code);
+				//	lb.text+=String(event.info.code)+"\n";
+				switch (event.info.code) {
+					case "NetConnection.Connect.Success":
+						connectStream();
+						break;
+					case "NetStream.Play.StreamNotFound":
+						trace("Stream not found: " );
+						break;
+				}
+			}
+			private function securityErrorHandler(event:SecurityErrorEvent):void {
+				trace("securityErrorHandler: " + event);
+			}
+			
+			private function connectStream():void {
+				if(!ui.contains(video))
+				{
+					ui.addChild(video);
+					video.width=ui.width;
+					video.height=ui.height;
+					video.smoothing=true;
+				}
+				stream = new NetStream(connection);  
+				video.attachNetStream(stream);
+				  
+				stream.play("rtmp://192.0.0.158:1935/videoStream/28-10-7b-12-39-46/2015-03-24-06.flv");
+				/*
+				cam = Camera.getCamera();
+				if(cam != null){    
+				 	lb.text= cam.name;
+					
+				 	cam.setMode(video.width,video.height,30);    
+				 	cam.setQuality(0,100);    
+					 
+					stream = new NetStream(connection);    
+ 				 	stream.attachCamera(cam);    
+					
+					if(persistencemanager.load())
+					{
+						if(persistencemanager.getProperty("streamName"))
+						{
+							 trace("流名"+String(persistencemanager.getProperty("streamName")));
+							 stream.publish(String(persistencemanager.getProperty("streamName")),"record"); 
+						}
+						else
+						{
+							errorMessage.text="流名未知";
+						}
+					}
+					else
+					{
+						errorMessage.text="流名未知";
+					}
+				 
+				    video.attachCamera(cam);    
+					cam.addEventListener(StatusEvent.STATUS, statusHandler,false,0,true);  
+				
+				}else{    
+					lb.text="无法获取摄像头";
+					connection.call("login",new Responder(okHandle,failureHandle),"Flex"); 
+				}    */
+				if(stream)
+				{
+					stream.addEventListener(NetStatusEvent.NET_STATUS, netStatusHandler,false,0,true);
+					stream.client = new CustomClient;
+				}
+			 
+				
+			}
+			public function okHandle(result:String):void{ 
+				trace("ok:"+result); 
+				lb.text=result; 
+			} 
+			
+			public function failureHandle(result:String):void{ 
+				trace("failure:"+result); 
+			} 
+		   private 	function statusHandler(event:StatusEvent):void 
+			{ 
+				if (!cam.muted) 
+				{ 
+					lb.text="not mute!";
+					var t:Timer = new Timer(500); 
+					t.addEventListener(TimerEvent.TIMER, timerHandler,false,0,true); 
+					t.start(); 
+				}
+				else
+				{
+					lb.text="mute!";
+				}
+				cam.removeEventListener(StatusEvent.STATUS, statusHandler); 
+			} 
+		   private	function timerHandler(event:TimerEvent):void 
+			{ 
+			  
+			    lb.text="activityLevel: " + cam.activityLevel + "\n"+"bandwidth: " + cam.bandwidth + "\n"
+					+"currentFPS: " + cam.currentFPS + "\n"+"fps: " + cam.fps + "\n"+"keyFrameInterval: " + cam.keyFrameInterval + "\n"
+					+"loopback: " + cam.loopback + "\n"+"motionLevel: " + cam.motionLevel + "\n"+"motionTimeout: " + cam.motionTimeout + "\n"+
+					"quality: " + cam.quality + "\n"; 
+			   
+				 
+		 
+			}
+			public function onBWDone(... rest):void{
+				var p_bw:Number=0;
+				if (rest.length > 0) p_bw = rest[0];
+				//	trace("bandwidth = " + p_bw + " Kbps.");
+			}
+			
+			public function onBWCheck(... rest):void{
+				trace("onBWCheck"+onBWCheck);
+			}
+		]]>
+	</fx:Script>
+	
+	<s:BorderContainer backgroundAlpha="0" id="bc" x="0" y="0" borderWeight="0" borderVisible="false" borderAlpha="0"  backgroundColor="#000000"       width="{this.width}" height="{this.height}" horizontalCenter="0" verticalCenter="0">
+		<mx:UIComponent      horizontalCenter="0" verticalCenter="0" id="ui" width="100%" height="100%"/>
+		 
+		<!--s:Image horizontalCenter="0" verticalCenter="0"  source="assets/border.png" smooth="true" width="100%" height="100%" scaleMode="stretch"/-->
+		
+		<mx:HBox>
+			<s:Image smooth="true" width="48" height="48" source="assets/setting.png"  click="show_setting()" id="setbtn"/>
+			
+			<!--mx:Button id="setbtn"  color="#ffffff" styleName="mySettingButton"   click="show_setting()"/-->
+			<s:Label height="100%"   verticalAlign="middle"   textAlign="center" backgroundAlpha="0" fontSize="15" color="#ffffff" text="" id="errorMessage"/>
+		</mx:HBox>
+	</s:BorderContainer>
+	<s:Label color="#ffffff" id="lb" backgroundAlpha="0" horizontalCenter="0" verticalCenter="0" fontSize="30"/>
+	
+	<!--mx:ProgressBar  visible="false" styleName="pbstyle"  mode="manual" height="50" width="200" id="progress" textAlign="center"  horizontalCenter="0" verticalCenter="0"/-->
+	<!--s:VideoDisplay id="vd" source="rtmp://fmsvideo.p5w.net:1935/live/rsc1" width="100%" height="100%"  /-->
+	<!--s:VideoPlayer id="vp" source="rtmp://unirtmp.tulix.tv:1935/globaltv/myStream.sdp" width="100%" height="100%"    /-->
+</s:View>
+
